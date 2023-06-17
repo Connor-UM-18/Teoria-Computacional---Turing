@@ -1,0 +1,345 @@
+\chapter{Anexos}
+\lstset{
+    language=C,
+    basicstyle=\ttfamily\small\color{black},
+    numbers=left,
+    numberstyle=\tiny,
+    stepnumber=1,
+    numbersep=8pt,
+    backgroundcolor=\color{white},
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    frame=single,
+    rulecolor=\color{magenta},
+    tabsize=2,
+    captionpos=b,
+    breaklines=true,
+    breakatwhitespace=false,
+    title=\lstname,
+    escapeinside={\%*}{*)},
+    keywordstyle=\color{blue},
+    commentstyle=\color{red},
+    stringstyle=\color{orange},
+    morecomment=[l][\color{red}]{\#},
+    otherkeywords={=,!,<,>,*,+,-,&,|,^,~},
+    numbers=left,                   % Coloca los números de línea a la izquierda
+    numberstyle=\tiny\color{black}, % Estilo de los números de línea
+    stepnumber=1,    % Incremento en el que se muestran los números de línea
+    numbersep=8pt
+}
+\section{Código LATEX de este documento}
+Dirección GitHub:\url{https://github.com/Connor-UM-18/Teoria-Computacional---Turing.git}\newline
+Dirección Overleaf:\url{https://www.overleaf.com/2428945132mnyyfwyhddjq}\newline
+\section{maquina\_turing.py}
+Se presenta el código implementado para la solución al problema con extensión .py . Donde es necesario tener importada la librería random y pygame. \newline
+\\
+\begin{lstlisting}
+#Teoria de la computacion
+#Maquina de turing
+#Alumno: Connor Urbano Mendoza
+import random
+import pygame
+
+pygame.init() #Acceso al paquete pygame
+#Ancho
+WIDTH = 1300
+#Altura
+HEIGHT = 700
+screen = pygame.display.set_mode((WIDTH,HEIGHT)) #Tamanio de ventana a imprimir
+pygame.display.set_caption('Maquina de turing')
+font = pygame.font.Font('freesansbold.ttf',20)#Tipo de fuente 1 del juego
+big_font= pygame.font.Font('freesansbold.ttf',50)#Tipo de fuente 2 del juego
+timer = pygame.time.Clock()#velocidad de actualizacion de nuestro juego a 60 fps
+fps=60
+
+#Variables e imagenes del juego
+ubicacion = ['recuadro']
+
+#Variables de turnos cambiantes
+turn_step = 0
+selection= 100
+#Cargar imagenes en juego
+cuadro = pygame.image.load('C:\\Users\\soyco\\OneDrive\\Documents\\ESCOM\\sem4\\Teoria\\P2\\turing\\img\\cuadro.png')
+cuadro = pygame.transform.scale(cuadro,(101,101))
+
+cuadrado = [cuadro]
+
+lista_piezas = ['recuadro']
+
+#ver variables/contador flash
+boton_presionado = False
+
+def dibujar_boton():
+    boton_width = 150
+    boton_height = 45
+    boton_x = (WIDTH - boton_width) // 2
+    boton_y = (HEIGHT - boton_height - 20)-100
+
+    # Dibujar el botón como un rectángulo en la pantalla
+    boton_rect=pygame.Rect(boton_x, boton_y, boton_width, boton_height)
+    pygame.draw.rect(screen, (0, 255, 0), (boton_x, boton_y, boton_width, boton_height))
+    texto = font.render("Siguiente", True, (0, 0, 0))
+    texto_rect = texto.get_rect(center=(boton_x + boton_width // 2, boton_y + boton_height // 2))
+    screen.blit(texto, texto_rect)
+    return boton_rect
+   
+#Funcion para dibujar el contenido de la maquina de turing
+def mostrar_transiciones(recorrido,estado):
+    
+    #recorrido="X,0,0,1,[1],1,1,1,"
+    #estado="q2"
+    cuadro_size = 100  # Tamaño de cada cuadro del tablero
+    x = 0
+    y = 255
+    
+    font = pygame.font.Font(None, 100)  # Fuente y tamaño del número de casilla
+
+    transiciones = recorrido.split(',')  # Obtener las transiciones del recorrido
+
+    for i, transicion in enumerate(transiciones):
+        if i >= 12:
+            break  # Salir del bucle si se han mostrado todas las transiciones posibles
+        x = x + 100
+        if transicion.startswith('['):
+            # Realizar alguna acción especial para la transición que comienza con '['
+            # Por ejemplo, cambiar el color del recuadro o agregar un marcador adicional
+            numero_texto = font.render("^", True, 'yellow')  # Crear superficie de texto con la transición
+            numero_rect = numero_texto.get_rect(center=((x, y+110)))  # Posición del texto en el centro del recuadro
+            screen.blit(numero_texto, numero_rect)  # Pegar el texto en la pantalla
+            numero_texto = font.render("|", True, 'yellow')  # Crear superficie de texto con la transición
+            numero_rect = numero_texto.get_rect(center=((x, y+120)))  # Posición del texto en el centro del recuadro
+            screen.blit(numero_texto, numero_rect)  # Pegar el texto en la pantalla
+            numero_texto = font.render(estado, True, 'yellow')  # Crear superficie de texto con la transición
+            numero_rect = numero_texto.get_rect(center=((x, y+190)))  # Posición del texto en el centro del recuadro
+            screen.blit(numero_texto, numero_rect)  # Pegar el texto en la pantalla
+            index=lista_piezas.index('recuadro')
+            screen.blit(cuadrado[index],(x-50,y-55))
+            
+        numero_texto = font.render(transicion, True, 'black')  # Crear superficie de texto con la transición
+        numero_rect = numero_texto.get_rect(center=((x, y)))  # Posición del texto en el centro del recuadro
+        screen.blit(numero_texto, numero_rect)  # Pegar el texto en la pantalla
+ 
+#Funcion para dibujar tablero
+def dibujar_tablero():
+    cuadro_size = 100  # Tamaño de cada cuadro del tablero
+    tablero_width = 12 * cuadro_size  # Ancho total del tablero
+    tablero_height = 1 * cuadro_size  # Altura total del tablero
+    tablero_x = (WIDTH - tablero_width) // 2  # Posición X para centrar el tablero
+    tablero_y = ((HEIGHT - tablero_height) // 2 )-200 # Posición Y para centrar el tablero
+
+    for i in range(12):  # Iterar 12 veces para un tablero de 1x12
+        columna = i % 12
+        fila = 1
+        x = tablero_x + columna * cuadro_size
+        y = tablero_y + fila * cuadro_size
+        if fila % 2 == 0:
+            color = 'white' if columna % 2 == 0 else (226, 255, 255)
+        else:
+            color = (226, 255, 255) if columna % 2 == 0 else 'white'
+        pygame.draw.rect(screen, color, [x, y, cuadro_size, cuadro_size])
+        pygame.draw.rect(screen, 'black', [x, y, cuadro_size, cuadro_size], 2)  # Agregar borde de color 
+       
+ 
+# Función para generar automáticamente una cadena válida
+def generate_auto_string():
+    n = random.randint(0, 500)
+    input_string = '0' * n + '1' * n
+    return input_string
+
+def turing_M (state = None, #estados de la maquina de turing
+              blank = None, #simbolo blanco de el alfabeto dela cinta
+              rules = [],   #reglas de transicion
+              tape = [],    #cinta
+              final = None,  #estado valido y/o final
+              pos = 0):#posicion siguiente de la maquina de turing
+
+    st = state
+    if not tape: tape = [blank]
+    if pos <0 : pos += len(tape)
+    if pos >= len(tape) or pos < 0 : 
+        print("Se inicializa mal la posicion")
+        SystemExit(1)
+    
+    rules = dict(((s0, v0), (v1, dr, s1)) for (s0, v0, v1, dr, s1) in rules)
+    """
+        Estado	Símbolo leído	Símbolo escrito	       Mov. 	Estado sig.
+        qn(s0)  1,0,X,Y,B(v0)	  1,0,X,Y,B(v1)       R o L(dr)	   qn(s1)
+    """
+    while True:
+        with open('C:\\Users\\soyco\\OneDrive\\Documents\\ESCOM\\sem4\\Teoria\\P2\\turing\\output\\turing.txt', 'a') as archivo:
+            archivo.write(st+ '\n')
+            #print (st, '\t', end=" ")
+            for i, v in enumerate(tape):
+                if i==pos: 
+                    #print ("[%s]"%(v,),end=" ")
+                    archivo.write('['+v+'],')
+                else: 
+                    #print (v, end=" ")
+                    archivo.write(v+',') 
+            #print()
+            archivo.write('\n')
+            if st == final: 
+                print("Cadena valida.")
+                break
+            if (st, tape[pos]) not in rules: 
+                print("Cadena invalida.")
+                break
+            
+            (v1,dr,s1) = rules [(st, tape[pos])]
+            tape[pos]=v1 #rescribe el simbolo de la cinta
+    
+    #movimiento del cabezal
+        if dr == 'left':
+            if pos > 0: pos -= 1
+            else: tape.insert(0, blank)
+        if dr == 'right':
+            pos += 1
+            if pos >= len(tape): tape.append(blank)
+        st = s1
+
+def turing_MG (state = None, #estados de la maquina de turing
+              blank = None, #simbolo blanco de el alfabeto dela cinta
+              rules = [],   #reglas de transicion
+              tape = [],    #cinta
+              final = None,  #estado valido y/o final
+              pos = 0):#posicion siguiente de la maquina de turing
+
+    st = state
+    if not tape: tape = [blank]
+    if pos <0 : pos += len(tape)
+    if pos >= len(tape) or pos < 0 : 
+        print("Se inicializa mal la posicion")
+        SystemExit(1)
+    
+    rules = dict(((s0, v0), (v1, dr, s1)) for (s0, v0, v1, dr, s1) in rules)
+    """
+        Estado	Símbolo leído	Símbolo escrito	       Mov. 	Estado sig.
+        qn(s0)  1,0,X,Y,B(v0)	  1,0,X,Y,B(v1)       R o L(dr)	   qn(s1)
+    """
+    while True:
+        with open('C:\\Users\\soyco\\OneDrive\\Documents\\ESCOM\\sem4\\Teoria\\P2\\turing\\output\\turing.txt', 'a') as archivo:
+            archivo.write('|-'+st+ '->')
+            #print (st, '\t', end=" ")
+            for i, v in enumerate(tape):
+                if i==pos: 
+                    #print ("[%s]"%(v,),end=" ")
+                    archivo.write('['+v+'],')
+                else: 
+                    #print (v, end=" ")
+                    archivo.write(v+',') 
+            #print()
+            if st == final: 
+                print("Cadena valida.")
+                break
+            if (st, tape[pos]) not in rules: 
+                print("Cadena invalida.")
+                break
+            
+            (v1,dr,s1) = rules [(st, tape[pos])]
+            tape[pos]=v1 #rescribe el simbolo de la cinta
+    
+    #movimiento del cabezal
+        if dr == 'left':
+            if pos > 0: pos -= 1
+            else: tape.insert(0, blank)
+        if dr == 'right':
+            pos += 1
+            if pos >= len(tape): tape.append(blank)
+        st = s1
+        
+with open('C:\\Users\\soyco\\OneDrive\\Documents\\ESCOM\\sem4\\Teoria\\P2\\turing\\output\\turing.txt', 'w') as archivo:
+    pass
+print("Maquina de turing")
+print("\n--- Menu ---")
+print("1. Ingresar una cadena manualmente")
+print("2. Generar una cadena automaticamente")
+print("0. Salir")
+
+option = input("Elige una opcion: ")
+
+if option == '1':
+    input_string = input("Ingrese una cadena menor a 11 caracteres. \nDigite la cadena deseada:  ")
+    #se puede cambiar las reglasde transicion para otra maquina de turing
+    turing_M (state = 'q0', #estado inicial de la maquina de turing
+                blank = 'B', #simbolo blanco de el alfabeto dela cinta
+                tape = list(input_string),#inserta los elementos en la cinta
+                final = 'q4',  #estado valido y/o final
+                rules = map(tuple,#reglas de transicion
+                            [
+                            "q0 0 X right q1".split(),
+                            "q0 Y Y right q3".split(),
+                            "q1 0 0 right q1".split(),
+                            "q1 1 Y left q2".split(),
+                            "q1 Y Y right q1".split(),
+                            "q2 0 0 left q2".split(),
+                            "q2 X X right q0".split(),
+                            "q2 Y Y left q2".split(),
+                            "q3 Y Y right q3".split(),
+                            "q3 B B right q4".split(),
+                            ]   
+                            )
+                )  
+    #Animamos la maquina de turing
+    #lista_estados = [int(num) for num in recorrido.split(",")]
+    coordenadas=(235,85)
+    nueva_coordenada=(0,0)
+    run=True
+    contador=1
+    leerlinea=0
+    with open('C:\\Users\\soyco\\OneDrive\\Documents\\ESCOM\\sem4\\Teoria\\P2\\turing\\output\\turing.txt', 'r') as archivo:
+        lineas = archivo.readlines()
+    
+    while run:
+        if len(lineas) == leerlinea:
+            print("Programa termino.")
+            SystemExit(0)
+        timer.tick(fps)
+        # Rellenar la pantalla con el color
+        screen.fill((30, 22, 37))
+        dibujar_tablero()
+        boton_rect = dibujar_boton()
+        estado = lineas[leerlinea].strip()  # Eliminar espacios en blanco al inicio y al final de la línea
+        recorrido = lineas[leerlinea+1].strip()
+        mostrar_transiciones(recorrido,estado)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                mouse_pos = pygame.mouse.get_pos()
+                if boton_rect.collidepoint(mouse_pos):  # Verificar si se hizo clic en el botón
+                    leerlinea=leerlinea+2
+        pygame.display.flip()
+    pygame.quit()
+  
+
+elif option == '2':
+    input_string = generate_auto_string()
+    print("Cadena generada automaticamente:", input_string)
+    print("Tamanio de cadena:", str(len(input_string)))
+    turing_MG (state = 'q0', blank = 'B', tape = list(input_string),final = 'q4', rules = map(tuple,
+                            #reglas de transicion
+                            [
+                            "q0 0 X right q1".split(),
+                            "q0 Y Y right q3".split(),
+                            "q1 0 0 right q1".split(),
+                            "q1 1 Y left q2".split(),
+                            "q1 Y Y right q1".split(),
+                            "q2 0 0 left q2".split(),
+                            "q2 X X right q0".split(),
+                            "q2 Y Y left q2".split(),
+                            "q3 Y Y right q3".split(),
+                            "q3 B B right q4".split(),
+                            ]   
+                            )
+                )
+    
+    
+else:
+    print("Opcion invalida. Inténtalo de nuevo.")
+    SystemExit(0)
+
+print("Programa termino.")
+
+\end{lstlisting}
